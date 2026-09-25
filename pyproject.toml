@@ -1,7 +1,7 @@
 [project]
 name = "promise-ledger"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI system that tracks and verifies promises made by company managements on earnings calls"
 readme = "README.md"
 authors = [
     { name = "Biswajit Gupta", email = "1999.biswajit.gupta@gmail.com" }
