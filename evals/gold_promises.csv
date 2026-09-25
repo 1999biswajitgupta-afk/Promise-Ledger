@@ -1,0 +1,10 @@
+id,company,quarter,speaker,page,quote,category,metric,target,deadline,strength
+TCS-Q1FY27-01,TCS,Q1FY27,CFO,22,"We want to exit at 25% plus and strive to achieve it sooner rather than later",margin,operating_margin,>=25%,Q4FY27,hard
+TCS-Q1FY27-02,TCS,Q1FY27,CEO,16,"Manufacturing, we believe will turn around in Q2",segment_growth,manufacturing_revenue_growth,positive QoQ,Q2FY27,soft
+TCS-Q1FY27-03,TCS,Q1FY27,CEO,16,"life sciences could turn around in Q2",segment_growth,life_sciences_revenue_growth,positive QoQ,Q2FY27,hedged
+TCS-Q1FY27-04,TCS,Q1FY27,CEO,16,"tech services will continue to grow",segment_growth,tech_services_revenue_growth,positive QoQ,none,soft
+TCS-Q1FY27-05,TCS,Q1FY27,CEO,11,"I expect the demand to improve sometime in Q2",revenue_growth,revenue_growth_cc_qoq,>0.4%,Q2FY27,soft
+TCS-Q1FY27-06,TCS,Q1FY27,Management,14,"target to have at least 1% of our employee base, to work in the new operating model",strategy,fde_share_of_headcount,>=1%,none,soft
+TCS-Q1FY27-07,TCS,Q1FY27,CFO,22,"our aspiration would be make the right investments and to progressively inch up closer, at least to the FY26 levels",margin,operating_margin_full_year,close to FY26 level,Q4FY27,soft
+TCS-Q1FY27-08,TCS,Q1FY27,CFO,5,"we remain committed to returning substantial free cash flows to our shareholders",shareholder_returns,fcf_payout,substantial,none,soft
+TCS-Q1FY27-09,TCS,Q1FY27,CEO,3,"Together, we will build sovereign and custom AI models for enterprises and establish a dedicated COE",strategy,mistral_coe_established,COE announced,none,soft
