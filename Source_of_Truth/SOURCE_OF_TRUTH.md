@@ -153,6 +153,10 @@ Each day lists what you **build**, what you **learn**, and what you must be able
 
 _Write in your own words after each day. This becomes interview prep._
 
+Virtual Environment is an separated isolated python project folder created so that it does not overlap with other python project. The purpose of virtual environment is to have uniformity for a project according to its unique requirement.
+A commit is used to save certain step of work that has been done. It is basically creating checkpoints. 
+
+
 -
 
 ## 10. Decisions log

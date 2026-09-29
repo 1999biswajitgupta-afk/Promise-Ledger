@@ -1,4 +1,4 @@
-"""Day 1 - Step 1: Talk to the BSE API and inspect the response."""
+"""Day 1 - Step 1: Talk to the BSE API, inspect the response, and download the PDF."""
 
 import json
 
@@ -42,6 +42,7 @@ def main():
     print("Calling BSE API...")
     print()
 
+    # 1. Call BSE announcement API
     response = session.get(
         API_URL,
         params=params,
@@ -56,28 +57,62 @@ def main():
 
     if response.status_code != 200:
         print("BSE rejected the request.")
-        print()
-        print("Response body:")
         print(response.text[:2000])
         return
 
-    try:
-        data = response.json()
-    except requests.exceptions.JSONDecodeError:
-        print("BSE did not return JSON.")
-        print()
-        print("Response body:")
-        print(response.text[:2000])
+    # 2. Convert JSON response into Python objects
+    data = response.json()
+
+    print("Top-level keys:")
+    print(data.keys())
+
+    print("\nMetadata:")
+    print(json.dumps(data["Table1"], indent=2))
+
+    print("\nNumber of announcements:")
+    print(len(data["Table"]))
+
+    if not data["Table"]:
+        print("No announcements found.")
         return
 
-    print("Total rows:", data["Table1"][0]["ROWCNT"])
-    print()
+    # 3. Get the first announcement
+    row = data["Table"][0]
 
-    print("Announcements:")
-    print("-" * 80)
+    print("\nFirst announcement:")
+    print(json.dumps(row, indent=2))
 
-    for row in data["Table"]:
-        print(json.dumps(row, indent=2))
+    # 4. Get the PDF filename
+    print("\nAttachment name:")
+    print(row["ATTACHMENTNAME"])
+
+    # 5. Build the PDF URL
+    pdf_url = (
+        "https://www.bseindia.com/xml-data/corpfiling/AttachLive/"
+        + row["ATTACHMENTNAME"]
+    )
+
+    print("\nPDF URL:")
+    print(pdf_url)
+
+    # 6. Download the PDF
+    pdf_response = session.get(
+        pdf_url,
+        timeout=30,
+    )
+
+    print("\nPDF status code:", pdf_response.status_code)
+    print("PDF content type:", pdf_response.headers.get("Content-Type"))
+    print("PDF size:", len(pdf_response.content), "bytes")
+
+    if pdf_response.status_code != 200:
+        print("Failed to download PDF.")
+    return
+
+    with open("data/raw/TCS/transcript.pdf", "wb") as file:
+        file.write(pdf_response.content)
+
+    print("PDF saved successfully.")
 
 
 if __name__ == "__main__":
