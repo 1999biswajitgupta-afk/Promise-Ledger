@@ -8,7 +8,10 @@ from pathlib import Path
 import requests
 
 API_URL = "https://api.bseindia.com/BseIndiaAPI/api/AnnSubCategoryGetData/w"
-PDF_BASE_URL = "https://www.bseindia.com/xml-data/corpfiling/AttachLive/"
+PDF_BASE_URLS = [
+    "https://www.bseindia.com/xml-data/corpfiling/AttachLive/",
+    "https://www.bseindia.com/xml-data/corpfiling/AttachHis/",
+]
 
 HEADERS = {
     "User-Agent": (
@@ -47,15 +50,20 @@ def quarter_label(filed: datetime) -> str:
     return f"Q4FY{year % 100}"
 
 
-def fetch_transcript_rows(session: requests.Session, bse_code: str) -> list[dict]:
-    """Get every transcript announcement for one company, page by page."""
+def fetch_announcements(
+    session: requests.Session,
+    bse_code: str,
+    category: str = "-1",
+    subcategory: str = "-1",
+) -> list[dict]:
+    """Every announcement for one company, page by page. "-1" means all."""
     rows = []
     page = 1
     while True:
         params = {
             "pageno": page,
-            "strCat": "Company Update",
-            "subcategory": "Earnings Call Transcript",
+            "strCat": category,
+            "subcategory": subcategory,
             "strPrevDate": FROM_DATE,
             "strToDate": TO_DATE,
             "strSearch": "P",
@@ -74,15 +82,32 @@ def fetch_transcript_rows(session: requests.Session, bse_code: str) -> list[dict
         time.sleep(1)
 
 
+def is_transcript(row: dict) -> bool:
+    """Companies label transcripts inconsistently, so look for the word itself."""
+    text = f"{row['NEWSSUB']} {row['HEADLINE'] or ''}".lower()
+    return "transcript" in text
+
+
 def download_pdf(session: requests.Session, attachment: str, path: Path) -> str:
-    """Download one PDF. Skip it if we already have it."""
+    """Download one PDF: try the live folder first, then the archive."""
     if path.exists():
         return "skipped (already have it)"
 
-    response = session.get(PDF_BASE_URL + attachment, timeout=60)
-    response.raise_for_status()
-    if not response.content.startswith(b"%PDF"):
-        return "FAILED (not a PDF)"
+    for base_url in PDF_BASE_URLS:
+        response = session.get(base_url + attachment, timeout=60)
+        if response.status_code == 404:
+            continue  # not here, try the next folder
+        response.raise_for_status()
+
+        if not response.content.startswith(b"%PDF"):
+            return f"FAILED (not a PDF, starts with {response.content[:8]!r})"
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(response.content)
+        folder = base_url.rstrip("/").split("/")[-1]
+        return f"downloaded from {folder} ({len(response.content):,} bytes)"
+
+    return "FAILED (404 in both AttachLive and AttachHis)"
 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(response.content)
@@ -102,7 +127,8 @@ def main():
         print(f"\n{symbol} (BSE {company['bse_code']})")
 
         try:
-            rows = fetch_transcript_rows(session, company["bse_code"])
+            all_rows = fetch_announcements(session, company["bse_code"])
+            rows = [row for row in all_rows if is_transcript(row)]
         except requests.RequestException as error:
             print("   API call failed:", error)
             continue
@@ -115,7 +141,8 @@ def main():
         for row in rows:
             filed = datetime.fromisoformat(row["NEWS_DT"][:19])
             quarter = quarter_label(filed)
-            filename = f"{symbol}_{quarter}_{filed:%Y%m%d}.pdf"
+            file_id = row["ATTACHMENTNAME"][:8]
+            filename = f"{symbol}_{quarter}_{filed:%Y%m%d}_{file_id}.pdf"
             path = RAW_DIR / symbol / filename
             headline = (row["HEADLINE"] or "").strip()
 
